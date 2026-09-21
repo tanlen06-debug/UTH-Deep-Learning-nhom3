@@ -68,4 +68,9 @@ data/
 CourseWork/Member_02_Data/data/processed/zip_image_index.csv
 
 # TUYỆT ĐỐI không push NIH raw dataset (~42 GB)
-CourseWork/Member_02_Data/data/data NIH xray14/
+CourseWork/Member_02_Data/data/data 
+# Bỏ qua toàn bộ dữ liệu ảnh và file nén
+CourseWork/archive (5)/
+CourseWork/chest_xray/
+*.zip
+*.csv
