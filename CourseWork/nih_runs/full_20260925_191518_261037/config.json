@@ -1,0 +1,19 @@
+{
+  "mode": "full",
+  "seed": 42,
+  "image_size": 224,
+  "batch_size": 16,
+  "epochs": 10,
+  "lr": 0.001,
+  "weight_decay": 0.0001,
+  "age_scale": 100.0,
+  "age_range": [
+    1.0,
+    100.0
+  ],
+  "augmentation": "affine ±7deg, translate .03, scale .95–1.05",
+  "metadata_sha256": "d618c64f5fedf854e6ed01cbd3fce0878d8bc922d861c9830b8114d21c37f7d3",
+  "python": "3.13.2 (tags/v3.13.2:4f8bb39, Feb  4 2025, 15:23:48) [MSC v.1942 64 bit (AMD64)]",
+  "torch": "2.13.0+cu126",
+  "device": "cuda"
+}
