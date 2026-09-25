@@ -1,777 +1,504 @@
-Nhóm 3 — Medical Image Regression
+# 🩻 Nhóm 3 — Medical Image Regression
 
-Dự đoán tuổi bệnh nhân từ ảnh X-quang ngực
+## Dự đoán tuổi bệnh nhân từ ảnh X-quang ngực
 
-Coursework học phần Deep Learning, triển khai bài toán hồi quy tuổi bằng CNN + Global Average Pooling + Linear output trên Random Sample of NIH Chest X-ray Dataset. Nhóm so sánh MAE với MSE loss và đánh giá ảnh hưởng của data augmentation bằng bốn thí nghiệm E1–E4.
+Coursework học phần **Deep Learning**, thực hiện bài toán **hồi quy tuổi** bằng mô hình **CNN + Global Average Pooling + Linear output**.
 
-Thông tin
+Nhóm sử dụng **Random Sample of NIH Chest X-ray Dataset**, so sánh **MAE và MSE loss**, đồng thời kiểm tra ảnh hưởng của **data augmentation** thông qua bốn thí nghiệm E1–E4.
 
-Nội dung
+---
 
-Repository
+## 1. Thông tin dự án
 
-UTH-Deep-Learning-nhom3
+| Nội dung | Thông tin |
+|---|---|
+| Nhóm thực hiện | Nhóm 3 |
+| Học phần | Deep Learning |
+| Bài toán | Medical Image Regression |
+| Mục tiêu | Dự đoán tuổi bệnh nhân từ ảnh X-quang ngực |
+| Đầu vào | Một ảnh X-quang ngực |
+| Đầu ra | Một giá trị tuổi liên tục, đơn vị năm |
+| Mô hình | CNN + Global Average Pooling + Linear |
+| Framework | PyTorch |
+| Môi trường | Jupyter Notebook trong Visual Studio Code |
+| Notebook chính | [NIH_Age_Regression_Nhom3_Local.ipynb](./NIH_Age_Regression_Nhom3_Local.ipynb) |
 
-Notebook chính
+> **Phạm vi:** Nhóm thực hiện hồi quy tuổi trên tập mẫu NIH. Kết quả không đại diện cho toàn bộ NIH ChestX-ray14 và chưa được xác nhận cho sử dụng lâm sàng.
 
-NIH_Age_Regression_Nhom3_Local.ipynb
+---
 
-Loại bài toán
+## 2. Mục tiêu và câu hỏi nghiên cứu
 
-Regression — dự đoán một giá trị tuổi liên tục
+### Mục tiêu
 
-Đầu vào
+- Xây dựng pipeline Deep Learning hoàn chỉnh cho bài toán hồi quy ảnh y tế.
+- Sử dụng nhãn `Patient Age` để dự đoán tuổi.
+- Chia dữ liệu theo bệnh nhân nhằm hạn chế rò rỉ dữ liệu.
+- Triển khai đúng kiến trúc CNN + GAP + Linear.
+- So sánh hai hàm mất mát MAE và MSE.
+- Đánh giá tác động của augmentation.
+- Phân tích kết quả tổng thể và sai số theo nhóm tuổi.
 
-Một ảnh X-quang ngực, chuyển thành ảnh xám
+### Câu hỏi nghiên cứu
 
-Đầu ra
+1. CNN có tốt hơn baseline dự đoán tuổi trung bình hoặc trung vị không?
+2. MAE loss và MSE loss ảnh hưởng thế nào đến kết quả?
+3. Augmentation có cải thiện khả năng tổng quát hóa không?
+4. Mô hình hoạt động tốt hoặc kém ở những nhóm tuổi nào?
 
-Tuổi dự đoán, đơn vị năm
+---
 
-Framework
+## 3. Dataset
 
-PyTorch
+**Dữ liệu sử dụng:**
 
-Môi trường thực hiện
+[Random Sample of NIH Chest X-ray Dataset — Kaggle](https://www.kaggle.com/datasets/nih-chest-xrays/sample)
 
-Jupyter Notebook trong Visual Studio Code
+**Nguồn dữ liệu gốc trong đề bài:**
 
-Kết quả chính của lần chạy final
+[NIH ChestX-ray14](https://nihcc.app.box.com/v/ChestXray-NIHCC)
 
-E3: test MAE 11,432 năm, RMSE 14,211 năm, R² 0,316
+### Metadata cần thiết
 
-Kết quả trong README được trích từ output của notebook final ở chế độ full, seed 42, 10 epoch cho mỗi thí nghiệm. Đây là kết quả trên tập mẫu NIH, không đại diện cho toàn bộ NIH ChestX-ray14. Tên notebook dùng trong repository được thống nhất là NIH_Age_Regression_Nhom3_Local.ipynb.
+| Trường | Vai trò |
+|---|---|
+| `Image Index` | Ghép metadata với tên ảnh |
+| `Patient ID` | Chia dữ liệu theo bệnh nhân |
+| `Patient Age` | Nhãn hồi quy tuổi |
 
-1. Mục tiêu và yêu cầu đề bài
+Nhóm chọn **dự đoán tuổi** vì dữ liệu có nhãn `Patient Age`. Các nhãn bệnh không được dùng thay cho tuổi hoặc kích thước khối u.
 
-Đề bài yêu cầu Medical Image Regression (Age or Tumor Size Prediction): dự đoán một đại lượng liên tục từ ảnh y tế, sử dụng CNN, Global Average Pooling và đầu ra tuyến tính; mở rộng bằng so sánh MAE/MSE và thử augmentation.
+### Kết quả kiểm tra dữ liệu trong lần chạy final
 
-Nhóm chọn dự đoán tuổi vì metadata của tập mẫu có trường Patient Age. Nhãn tuổi là mục tiêu học; Patient ID chỉ phục vụ chia dữ liệu và phân tích theo bệnh nhân. Các nhãn bệnh không được dùng thay cho tuổi hoặc kích thước khối u.
+| Hạng mục | Số lượng |
+|---|---:|
+| Dòng metadata ban đầu | 5.606 |
+| Dòng bị loại khi làm sạch | 2 |
+| Ảnh sử dụng | 5.604 |
+| Bệnh nhân | 4.228 |
+| Ảnh thiếu hoặc không đọc được ghi nhận | 0 |
 
-Các câu hỏi thực nghiệm:
+Tuổi được chuyển về đơn vị năm và kiểm tra trong phạm vi nghiên cứu từ **1 đến 100 năm**.
 
-CNN có dự đoán tuổi tốt hơn baseline luôn trả về tuổi trung bình hoặc trung vị của tập train không?
+> Ví dụ: `018M` tương ứng **1,5 năm**, không phải 18 tuổi.
 
-MAE loss và MSE loss tạo ra kết quả khác nhau như thế nào trên cùng điều kiện thực nghiệm?
+---
 
-Augmentation có cải thiện khả năng tổng quát hóa không, và tác động có giống nhau giữa hai loại loss không?
+## 4. Tổ chức tệp
 
-Sai số thay đổi ra sao theo tuổi, và những trường hợp nào mô hình dự đoán kém?
+| Đường dẫn | Nội dung |
+|---|---|
+| `CourseWork/README.md` | Giới thiệu và hướng dẫn thực hiện |
+| `CourseWork/00_COURSEWORK_PLAN.md` | Kế hoạch coursework |
+| `CourseWork/01_MEMBER_TASKS.md` | Phân công thành viên |
+| `CourseWork/NIH_Age_Regression_Nhom3_Local.ipynb` | Notebook chính |
+| `CourseWork/archive (5)/` | Ví dụ thư mục dữ liệu đã giải nén |
+| `CourseWork/nih_runs/` | Các lần chạy và kết quả đã lưu |
 
-Yêu cầu
+Dữ liệu ảnh và metadata được tải riêng từ Kaggle. Có thể đặt dữ liệu ngoài repository rồi cập nhật `DATA_DIR`.
 
-Cách triển khai
+Thư mục dữ liệu cần chứa:
 
-Dữ liệu NIH ChestX-ray14
+- File `sample_labels.csv`.
+- Các ảnh PNG trong thư mục con.
 
-Dùng tập mẫu có ảnh và metadata tuổi để giảm chi phí lưu trữ, huấn luyện
+Notebook tìm metadata và ảnh bên dưới `DATA_DIR`, nên thư mục giải nén có thể có thêm một cấp `sample/`.
 
-Giá trị đầu ra liên tục
+---
 
-Một số thực biểu diễn tuổi
+## 5. Hướng dẫn chạy trên VS Code
 
-CNN
+### Bước 1 — Chuẩn bị môi trường
 
-Bốn khối Conv2d → BatchNorm2d → ReLU → MaxPool2d
+Cài Python cùng hai extension của Microsoft trong VS Code:
 
-Global Average Pooling
+- **Python**
+- **Jupyter**
 
-nn.AdaptiveAvgPool2d(1)
+Mở thư mục repository và chọn đúng môi trường Python làm kernel của notebook.
 
-Linear output
+Các thư viện sử dụng:
 
-nn.Linear(256, 1)
+```text
+torch
+torchvision
+numpy
+pandas
+matplotlib
+pillow
+scikit-learn
+tqdm
+ipykernel
+```
 
-So sánh loss
+Cài PyTorch phù hợp với CPU hoặc GPU theo hướng dẫn:
 
-nn.MSELoss() và nn.L1Loss()
+https://pytorch.org/get-started/locally/
 
-Thử augmentation
+### Bước 2 — Tải và giải nén dataset
 
-So sánh có/không RandomAffine trên train
+Tải bộ dữ liệu từ Kaggle, sau đó giải nén.
 
-Đánh giá hồi quy
+> `DATA_DIR` phải trỏ đến **thư mục đã giải nén**, không trỏ đến file ZIP.
 
-MAE, MSE, RMSE, R², bias và phân tích sai số
+### Bước 3 — Chỉnh cell cấu hình
 
-2. Dữ liệu và cách tải
+Ví dụ:
 
-Tập mẫu sử dụng: Random Sample of NIH Chest X-ray Dataset — Kaggle.
-
-Nguồn dữ liệu gốc trong đề: NIH ChestX-ray14.
-
-Metadata cần thiết: sample_labels.csv.
-
-Các trường bắt buộc: Image Index, Patient ID, Patient Age.
-
-Tải bộ dữ liệu từ Kaggle rồi giải nén. DATA_DIR phải trỏ đến thư mục đã giải nén, không trỏ đến file .zip. Có thể đặt dữ liệu ngoài repository; chỉ cần cập nhật đường dẫn trong cell cấu hình.
-
-Notebook tìm sample_labels.csv và ảnh trong các thư mục con. Nếu có nhiều CSV cùng tên nhưng khác nội dung, cần chỉ định CSV_FILE để tránh đọc nhầm.
-
-Số liệu kiểm tra trong lần chạy final
-
-Hạng mục
-
-Kết quả
-
-Dòng metadata ban đầu
-
-5.606
-
-Dòng bị loại trong bước làm sạch
-
-2
-
-Ảnh sử dụng sau kiểm tra
-
-5.604
-
-Bệnh nhân
-
-4.228
-
-Ảnh thiếu hoặc không đọc được ghi nhận
-
-0
-
-Ảnh trùng nội dung bị loại
-
-0
-
-Tuổi trung bình / trung vị
-
-46,71 / 49 năm
-
-Nhãn tuổi được đổi về năm; ví dụ 018M tương ứng 1,5 năm. Notebook kiểm tra phạm vi nghiên cứu từ 1 đến 100 năm. Việc loại mẫu được ghi nhận để có thể kiểm tra lại.
-
-3. Tổ chức tệp trong CourseWork
-
-Các đường dẫn dưới đây mô tả cách bố trí để chạy notebook. Thư mục dữ liệu được tải riêng; thư mục kết quả được tạo khi chạy, không phải tất cả đều bắt buộc có sẵn trên GitHub.
-
-Đường dẫn
-
-Vai trò
-
-CourseWork/README.md
-
-Tổng quan, hướng dẫn chạy và kết quả
-
-CourseWork/NIH_Age_Regression_Nhom3_Local.ipynb
-
-Notebook chính để thực hiện và báo cáo
-
-CourseWork/00_COURSEWORK_PLAN.md
-
-Kế hoạch coursework
-
-CourseWork/01_MEMBER_TASKS.md
-
-Phân công và theo dõi đóng góp
-
-CourseWork/archive (5)/sample_labels.csv
-
-Một vị trí có thể đặt metadata sau giải nén
-
-CourseWork/archive (5)/sample/images/
-
-Một vị trí có thể đặt ảnh PNG
-
-CourseWork/nih_runs/full_<timestamp>/
-
-Kết quả một lần chạy đầy đủ
-
-Tên archive (5) chỉ là tên thư mục tải xuống trên máy thực hiện. Có thể đổi tên hoặc đặt ở ổ đĩa khác rồi cập nhật DATA_DIR. Metadata nằm sâu hơn một cấp vẫn được tìm thấy nếu nằm bên dưới DATA_DIR.
-
-4. Cài đặt và mở notebook trong VS Code
-
-4.1. Lấy mã nguồn
-
-Nếu máy chưa có repository, chạy trong terminal:
-
-git clone https://github.com/tanlen06-debug/UTH-Deep-Learning-nhom3.git
-cd UTH-Deep-Learning-nhom3
-code .
-
-Nếu đã có mã nguồn, mở thư mục hiện tại bằng VS Code. Kiểm tra và lưu các thay đổi đang làm trước khi cập nhật từ GitHub.
-
-4.2. Tạo môi trường Python trên Windows
-
-Cài extension Python và Jupyter của Microsoft trong VS Code. Ví dụ dưới đây dùng Python 3.11; cần cài phiên bản này trước khi dùng py -3.11.
-
-Chạy tại thư mục gốc repository:
-
-py -3.11 -m venv .venv
-.\.venv\Scripts\python.exe -m pip install --upgrade pip
-.\.venv\Scripts\python.exe -m pip install numpy pandas matplotlib pillow scikit-learn tqdm ipykernel
-
-Cài PyTorch theo phần cứng:
-
-CPU trên Windows: có thể dùng lệnh bên dưới.
-
-GPU NVIDIA: lấy lệnh cài phù hợp từ trang PyTorch chính thức, rồi chạy bằng Python của .venv. Không chọn phiên bản CUDA chỉ theo tên GPU.
-
-.\.venv\Scripts\python.exe -m pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
-
-Các lệnh này là cách thiết lập môi trường mới, không phải bản khóa phiên bản của lần chạy final. Khi cần tái lập, đối chiếu config.json của lần chạy đã lưu và ghi lại các phiên bản thư viện sử dụng.
-
-4.3. Chọn đúng kernel
-
-Mở notebook, chọn Select Kernel → Python Environments → .venv. Có thể kiểm tra bằng:
-
-import sys
-import torch
-
-print("Python:", sys.executable)
-print("PyTorch:", torch.__version__)
-print("CUDA available:", torch.cuda.is_available())
-
-Notebook hiện chọn CUDA khi khả dụng, nếu không sẽ chạy CPU. Có thể xem các output đã lưu trong notebook mà không cần huấn luyện lại.
-
-5. Cấu hình và các chế độ chạy
-
-Sửa các biến trong cell cấu hình đầu tiên có DATA_DIR và MODE. Ví dụ đường dẫn tuyệt đối trên Windows:
-
+```python
 from pathlib import Path
 
 DATA_DIR = Path(r"D:\Datasets\NIH_sample")
 CSV_FILE = None
+
 MODE = "check"
 RUN_DIR = None
+
 OUT_ROOT = Path.cwd() / "nih_runs"
+```
 
-Thay đường dẫn ví dụ bằng thư mục thực tế của máy. Path.cwd() là thư mục làm việc của kernel; kiểm tra dòng Working directory để biết nih_runs sẽ được tạo ở đâu.
+Thay đường dẫn ví dụ bằng đường dẫn thực tế trên máy.
 
-MODE
+Nếu có nhiều file CSV cùng tên nhưng khác nội dung, chỉ định rõ:
 
-Mục đích
+```python
+CSV_FILE = Path(r"D:\Datasets\NIH_sample\sample_labels.csv")
+```
 
-Cách sử dụng
+### Bước 4 — Chọn chế độ chạy
 
-check
+| Chế độ | Mục đích |
+|---|---|
+| `check` | Kiểm tra dữ liệu, split, preprocessing và mô hình; không train E1–E4 |
+| `smoke` | Chạy nhanh với tập nhỏ và 1 epoch để kiểm tra pipeline |
+| `full` | Huấn luyện đầy đủ E1–E4 |
+| `reload` | Đọc lại kết quả đã lưu mà không train lại |
 
-Kiểm tra dữ liệu, split, transforms và mô hình; không train E1–E4
+**Quy trình khuyến nghị:**
 
-Chạy đầu tiên khi thiết lập trên máy mới
+1. Chạy `check` để xác nhận dữ liệu và đường dẫn.
+2. Chạy `smoke` nếu cần kiểm tra toàn bộ pipeline.
+3. Chạy `full` để tạo kết quả chính thức.
+4. Dùng `reload` để xem lại kết quả khi chuẩn bị báo cáo.
 
-smoke
+> Kết quả `smoke` chỉ dùng kiểm tra code, không dùng làm kết quả final.
 
-Kiểm tra nhanh pipeline với tập nhỏ và 1 epoch mỗi thí nghiệm
+Sau khi thay đổi cấu hình, chọn **Restart Kernel → Run All**.
 
-Chỉ kiểm tra code; không dùng kết quả làm báo cáo final
+### Bước 5 — Huấn luyện đầy đủ
 
-full
-
-Huấn luyện E1–E4 theo toàn bộ cấu hình
-
-Dùng để tạo kết quả thực nghiệm chính thức
-
-reload
-
-Đọc split, lịch sử và kết quả đã lưu; dựng lại phần đánh giá
-
-Dùng để xem lại một lần chạy, tránh train lại
-
-Sau khi đổi chế độ hoặc cấu hình, chọn Restart Kernel → Run All để tránh sử dụng nhầm biến từ lần chạy trước. Lưu bản notebook final có output trước khi chạy thử cấu hình mới.
-
-Huấn luyện đầy đủ
-
+```python
 MODE = "full"
+
 SEED = 42
 IMAGE_SIZE = 224
 BATCH_SIZE = 16
 EPOCHS = 10
+
 LR = 1e-3
 WEIGHT_DECAY = 1e-4
 AGE_SCALE = 100.0
 NUM_WORKERS = 0
+```
 
-Notebook dùng NUM_WORKERS = 0 để thuận tiện khi chạy Jupyter trên Windows. Nếu thay batch size, image size, số epoch hoặc split để giảm thời gian chạy, phải ghi đó là cấu hình khác; không gộp kết quả mới vào bảng final cũ.
+Notebook tự sử dụng CUDA nếu khả dụng, nếu không sẽ chạy CPU.
 
-Mở lại kết quả mà không train lại
+### Bước 6 — Xem lại kết quả đã lưu
 
+```python
 MODE = "reload"
-RUN_DIR = Path(r"D:\Projects\UTH-Deep-Learning-nhom3\CourseWork\nih_runs\full_20260925_191518_261037")
 
-Thay RUN_DIR bằng thư mục thực tế. Cần giữ metadata và ảnh tương ứng, config.json, các split CSV, history CSV, prediction CSV, bảng validation/test và checkpoint. Cell cuối kiểm tra inference còn cần file E3_best.pth hoặc checkpoint của cấu hình được chọn.
+RUN_DIR = Path(
+    r"D:\Projects\UTH-Deep-Learning-nhom3"
+    r"\CourseWork\nih_runs\full_20260925_191518_261037"
+)
+```
 
-Notebook đối chiếu hash metadata và manifest trước khi khôi phục split. Khi reload, giữ các thiết lập tiền xử lý tương ứng với config.json đã lưu. Chế độ này không phải tiếp tục huấn luyện từ epoch bị ngắt: notebook chưa lưu trạng thái optimizer để resume chính xác.
+Thay `RUN_DIR` bằng thư mục thực tế của lần chạy cần xem.
 
-6. Quy trình Deep Learning trong notebook
+Cần giữ dataset tương ứng cùng các tệp cấu hình, split, history, predictions, bảng kết quả và checkpoint. Giữ cấu hình tiền xử lý phù hợp với lần chạy đã lưu.
 
-Đọc và kiểm tra dữ liệu: ghép filename với metadata, đổi tuổi về năm, kiểm tra ảnh và nội dung trùng.
+> `reload` là đọc lại kết quả và kiểm tra inference. Đây không phải chức năng tiếp tục huấn luyện từ epoch bị ngắt.
 
-EDA: phân bố tuổi, số ảnh mỗi bệnh nhân và kích thước ảnh.
+---
 
-Chia theo bệnh nhân: cùng bệnh nhân chỉ thuộc một trong train, validation hoặc test.
+## 6. Quy trình xử lý
 
-Tiền xử lý: grayscale, resize giữ tỷ lệ và padding về 224 × 224, chuyển tensor, normalize.
+| Bước | Nội dung |
+|---|---|
+| 1 | Đọc metadata và ghép đường dẫn ảnh |
+| 2 | Chuyển tuổi về năm, kiểm tra dữ liệu |
+| 3 | Khám phá phân bố tuổi và số ảnh mỗi bệnh nhân |
+| 4 | Chia train/validation/test theo bệnh nhân |
+| 5 | Tiền xử lý ảnh và chuẩn hóa nhãn |
+| 6 | Xây dựng CNN + GAP + Linear |
+| 7 | Huấn luyện bốn thí nghiệm E1–E4 |
+| 8 | Chọn checkpoint theo validation MAE |
+| 9 | Đánh giá test và so sánh baseline |
+| 10 | Phân tích sai số, lưu kết quả và báo cáo |
 
-Chuẩn hóa nhãn: tuổi chia 100 trong lúc tối ưu; nhân lại 100 khi tính metric theo năm.
+### Phân chia dữ liệu trong lần chạy final
 
-Xây dựng CNN + GAP + Linear: đầu ra một giá trị liên tục.
+| Tập dữ liệu | Số ảnh | Số bệnh nhân |
+|---|---:|---:|
+| Train | 3.956 | 2.959 |
+| Validation | 824 | 634 |
+| Test | 824 | 635 |
 
-Huấn luyện E1–E4: cùng split, seed và ngân sách epoch.
+Notebook kiểm tra:
 
-Chọn checkpoint: validation MAE nhỏ nhất trong từng thí nghiệm; chọn cấu hình tốt nhất cũng bằng validation MAE.
+- Không có bệnh nhân xuất hiện ở nhiều tập.
+- Không có hash nội dung ảnh trùng nhau giữa các tập.
 
-Đánh giá test: so sánh với baseline, phân tích residual, nhóm tuổi và ví dụ sai số.
+### Tiền xử lý
 
-Lưu và trình bày: giữ cấu hình, bảng kết quả, hình, checkpoint và diễn giải giới hạn của thí nghiệm.
+- Chuyển ảnh sang grayscale.
+- Resize giữ tỷ lệ và padding về **224 × 224**.
+- Chuyển ảnh thành tensor và normalize.
+- Chia tuổi cho 100 khi tối ưu.
+- Nhân lại 100 trước khi tính metric theo đơn vị năm.
 
-Phân chia dữ liệu trong lần chạy final
+---
 
-Tập
+## 7. Kiến trúc mô hình
 
-Số ảnh
+Mô hình gồm bốn convolution block:
 
-Số bệnh nhân
+```text
+Conv2d → BatchNorm2d → ReLU → MaxPool2d
+```
 
-Tuổi trung bình
+| Thành phần | Kích thước đầu ra cho một ảnh |
+|---|---|
+| Input | 1 × 224 × 224 |
+| Conv block 1 | 32 × 112 × 112 |
+| Conv block 2 | 64 × 56 × 56 |
+| Conv block 3 | 128 × 28 × 28 |
+| Conv block 4 | 256 × 14 × 14 |
+| Global Average Pooling | 256 × 1 × 1 |
+| Flatten | 256 |
+| Linear | 1 |
 
-Train
+**Số tham số huấn luyện: 389.057.**
 
-3.956
+Các lớp cuối:
 
-2.959
+```python
+self.gap = nn.AdaptiveAvgPool2d(1)
+self.output = nn.Linear(256, 1)
+```
 
-46,54
+Đầu ra là một giá trị liên tục. Mô hình không sử dụng softmax hoặc sigmoid ở lớp cuối.
 
-Validation
+---
 
-824
+## 8. Thiết kế thí nghiệm E1–E4
 
-634
+| Thí nghiệm | Loss | Augmentation |
+|---|---|---|
+| E1 | MSE | Không |
+| E2 | MAE / L1 | Không |
+| E3 | MSE | Có |
+| E4 | MAE / L1 | Có |
 
-47,73
+Các thí nghiệm giữ cùng:
 
-Test
+- Patient-level split.
+- Kiến trúc mô hình.
+- Seed 42.
+- Batch size 16.
+- AdamW, learning rate 0,001.
+- Weight decay 0,0001.
+- Ngân sách 10 epoch.
 
-824
+### Augmentation
 
-635
+```python
+transforms.RandomAffine(
+    degrees=7,
+    translate=(0.03, 0.03),
+    scale=(0.95, 1.05),
+    fill=0
+)
+```
+
+Augmentation chỉ áp dụng ngẫu nhiên trên **train**. Validation và test sử dụng preprocessing xác định.
+
+**Nguyên tắc lựa chọn mô hình:**
+
+- Trong mỗi thí nghiệm: lấy checkpoint có validation MAE thấp nhất.
+- Giữa E1–E4: chọn cấu hình có validation MAE thấp nhất.
+- Test dùng để đánh giá, không dùng để chọn epoch hoặc điều chỉnh cấu hình.
 
-46,51
+---
 
-Tỷ lệ chia mục tiêu khoảng 70% / 15% / 15% theo bệnh nhân. Số ảnh không nhất thiết đúng tỷ lệ này vì mỗi người có số ảnh khác nhau. Notebook xác nhận không giao Patient ID và không giao hash nội dung ảnh giữa ba tập.
+## 9. Kết quả final
 
-7. Mô hình và thiết kế thí nghiệm
+### Kết quả validation
 
-Kiến trúc
+| Thí nghiệm | Epoch tốt nhất | Validation MAE — năm |
+|---|---:|---:|
+| E1 | 9 | 11,323900 |
+| E2 | 9 | 11,790808 |
+| **E3** | **10** | **11,258113** |
+| E4 | 9 | 12,569042 |
 
-Thành phần
+**Cấu hình được chọn: E3 — MSE có augmentation.**
 
-Kích thước đầu ra cho một ảnh
+### Kết quả test
 
-Ảnh đầu vào
+| Mô hình | MAE ↓ | RMSE ↓ | R² ↑ | Bias |
+|---|---:|---:|---:|---:|
+| E1 | 11,695 | 14,469 | 0,291 | −5,678 |
+| E2 | 11,828 | 14,685 | 0,270 | −2,809 |
+| **E3** | **11,432** | **14,211** | **0,316** | **+0,576** |
+| E4 | 12,592 | 15,395 | 0,198 | −4,559 |
+| Baseline tuổi trung bình train | 14,107 | 17,187 | ≈0 | +0,028 |
+| Baseline tuổi trung vị train | 13,942 | 17,366 | −0,021 | +2,488 |
 
-1 × 224 × 224
+MAE, RMSE và bias có đơn vị **năm**. R² không có đơn vị.
 
-Conv block 1
+### Nhận xét
 
-32 × 112 × 112
+- E3 giảm MAE khoảng **2,675 năm**, tương đương **19%**, so với baseline tuổi trung bình.
+- Augmentation cải thiện kết quả khi dùng MSE trong lần chạy này.
+- Augmentation làm tăng sai số khi dùng MAE trong lần chạy này.
+- E3 chỉ tốt hơn E1 khoảng **0,066 năm trên validation**; cần chạy nhiều seed để kiểm tra độ ổn định.
+- Mô hình có xu hướng dự đoán cao ở người trẻ và thấp ở người lớn tuổi.
 
-Conv block 2
+> Các kết luận trên dựa trên một seed, một split và 10 epoch cho mỗi thí nghiệm.
 
-64 × 56 × 56
+---
 
-Conv block 3
+## 10. Đánh giá và trực quan hóa
 
-128 × 28 × 28
+Notebook cung cấp:
 
-Conv block 4
+- Phân bố tuổi.
+- Phân bố tuổi giữa train, validation và test.
+- Ảnh trước và sau augmentation.
+- Training/validation loss.
+- Training/validation MAE.
+- Bảng so sánh E1–E4 với baseline.
+- Biểu đồ predicted vs. actual.
+- Phân bố residual.
+- Sai số theo nhóm tuổi.
+- Ví dụ có sai số nhỏ và sai số lớn.
+- Bootstrap theo bệnh nhân.
+- Kiểm tra nạp checkpoint và dự đoán một ảnh.
 
-256 × 14 × 14
+### Một số kết quả phân tích E3
 
-Global Average Pooling
+| Chỉ số | Kết quả |
+|---|---|
+| MSE | 201,957 năm² |
+| Median absolute error | 9,789 năm |
+| P90 absolute error | 22,961 năm |
+| Khoảng tin cậy bootstrap 95% của MAE | 10,75–12,16 năm |
+| Số lần bootstrap | 1.000 |
+| MAE nhóm trên 40 đến 60 tuổi | 6,093 năm |
+| MAE nhóm trên 80 đến 100 tuổi | 29,020 năm; chỉ có 6 ảnh |
 
-256 × 1 × 1
+Khoảng bootstrap là khoảng cho **MAE tổng hợp**, không phải khoảng dự đoán tuổi của từng bệnh nhân.
 
-Flatten và Linear
+Vì đây là bài toán Regression, nhóm dùng sai số hồi quy để đánh giá. Accuracy, confusion matrix và false positive/false negative không thay thế các metric hồi quy trên.
 
-1 giá trị
+---
 
-Mô hình có 389.057 tham số huấn luyện. GAP giảm chiều không gian trước lớp Linear. Đầu ra không bị giới hạn bởi sigmoid hoặc softmax.
+## 11. Lưu kết quả
 
-Ma trận E1–E4
+Mỗi lần chạy tạo thư mục riêng trong `nih_runs`.
 
-Thí nghiệm
+| Tệp | Nội dung |
+|---|---|
+| `config.json` | Cấu hình và thông tin môi trường |
+| `train_split.csv` | Manifest tập train |
+| `val_split.csv` | Manifest tập validation |
+| `test_split.csv` | Manifest tập test |
+| `data_audit.csv` | Kết quả kiểm tra dữ liệu |
+| `E1_history.csv` … `E4_history.csv` | Lịch sử huấn luyện |
+| `E1_best.pth` … `E4_best.pth` | Checkpoint tốt nhất |
+| `validation_results.csv` | Kết quả validation |
+| `test_results.csv` | Kết quả test |
+| `E1_predictions.csv` … `E4_predictions.csv` | Dự đoán và sai số |
+| `figures/` | Biểu đồ |
+| `summary_vi.md` | Tóm tắt kết quả |
 
-Loss
+Không ghép checkpoint, split và metric từ các lần chạy khác nhau.
 
-Augmentation trên train
+---
 
-E1
+## 12. Làm việc nhóm trên GitHub
 
-MSE
+### Quy trình
 
-Không
+1. Xác định nhiệm vụ trong Issue hoặc `01_MEMBER_TASKS.md`.
+2. Tạo branch riêng.
+3. Chỉnh sửa code hoặc tài liệu.
+4. Kiểm tra phần thay đổi và output liên quan.
+5. Commit những tệp cần thiết.
+6. Mở Pull Request để thành viên khác review.
+7. Merge sau khi thống nhất.
 
-E2
+### Ví dụ cập nhật README
 
-MAE / L1
+Chạy từ thư mục gốc repository sau khi đã lưu các thay đổi đang làm:
 
-Không
-
-E3
-
-MSE
-
-Có
-
-E4
-
-MAE / L1
-
-Có
-
-Augmentation dùng RandomAffine: xoay tối đa ±7°, dịch chuyển tối đa 3% theo mỗi trục, scale trong khoảng 0,95–1,05. Validation và test dùng preprocessing xác định, không dùng augmentation ngẫu nhiên.
-
-Các phép so sánh chính: E1/E2 và E3/E4 cho tác động của loss; E1/E3 và E2/E4 cho tác động của augmentation. MSE và MAE loss có thang đo khác nhau; dùng validation MAE theo năm làm tiêu chí chung để chọn mô hình.
-
-8. Kết quả thực nghiệm final
-
-Lựa chọn mô hình bằng validation
-
-Thí nghiệm
-
-Epoch tốt nhất
-
-Validation MAE (năm)
-
-E1
-
-9
-
-11,323900
-
-E2
-
-9
-
-11,790808
-
-E3
-
-10
-
-11,258113
-
-E4
-
-9
-
-12,569042
-
-E3 được chọn trước khi diễn giải kết quả test. Test không dùng để chọn epoch hoặc điều chỉnh hyperparameter.
-
-Kết quả trên 824 ảnh test
-
-Mô hình
-
-MAE ↓ (năm)
-
-RMSE ↓ (năm)
-
-R² ↑
-
-Bias (năm)
-
-E1
-
-11,695
-
-14,469
-
-0,291
-
-−5,678
-
-E2
-
-11,828
-
-14,685
-
-0,270
-
-−2,809
-
-E3
-
-11,432
-
-14,211
-
-0,316
-
-+0,576
-
-E4
-
-12,592
-
-15,395
-
-0,198
-
-−4,559
-
-Baseline tuổi trung bình train
-
-14,107
-
-17,187
-
-≈0
-
-+0,028
-
-Baseline tuổi trung vị train
-
-13,942
-
-17,366
-
-−0,021
-
-+2,488
-
-Trong lần chạy này, E3 giảm MAE khoảng 2,675 năm, tương đương 19%, so với baseline tuổi trung bình. Augmentation cải thiện test MAE khi dùng MSE nhưng làm tăng sai số khi dùng MAE. Chênh lệch validation giữa E3 và E1 chỉ khoảng 0,066 năm, nên cần nhiều lần chạy để đánh giá độ ổn định của thứ hạng.
-
-Cách đọc metric và hình ảnh
-
-MAE: trung bình độ lớn sai số; MAE 11,432 nghĩa là lệch trung bình khoảng 11,432 năm trên tập test này.
-
-MSE / RMSE: nhạy hơn với các sai số lớn; MSE có đơn vị năm², RMSE có đơn vị năm.
-
-R²: so sánh tổng sai số bình phương với biến thiên nhãn; không phải accuracy phần trăm.
-
-Bias: trung bình prediction − actual; dương là dự đoán tuổi cao hơn, âm là thấp hơn.
-
-Learning curves: quan sát tiến trình train/validation; không so sánh trực tiếp trị số MSE loss với MAE loss.
-
-Predicted vs. actual: điểm càng gần đường chéo càng gần nhãn thật.
-
-Residual plots: kiểm tra mô hình có dự đoán lệch theo tuổi hay không.
-
-Ví dụ sai số nhỏ/lớn: minh họa trường hợp cụ thể; đây là các mẫu được chọn theo sai số, không phải mẫu ngẫu nhiên đại diện.
-
-Phân tích sâu E3
-
-Phân tích
-
-Kết quả
-
-MSE
-
-201,957 năm²
-
-Median absolute error
-
-9,789 năm
-
-P90 absolute error
-
-22,961 năm
-
-Khoảng tin cậy bootstrap 95% của MAE
-
-10,75–12,16 năm
-
-Số lần bootstrap
-
-1.000; lấy mẫu theo bệnh nhân
-
-Nhóm tuổi có MAE thấp nhất
-
-Trên 40 đến 60 tuổi: 6,093 năm
-
-Nhóm trên 80 đến 100 tuổi
-
-MAE 29,020 năm; chỉ 6 ảnh
-
-Mô hình có xu hướng dự đoán cao ở người trẻ và thấp ở người lớn tuổi. Bias tổng gần 0 có thể do hai chiều sai số triệt tiêu nhau. Khoảng bootstrap là khoảng cho MAE tổng hợp, không phải khoảng dự đoán tuổi của từng người và không phản ánh biến động do train lại bằng seed khác.
-
-Vì đầu ra là tuổi liên tục, phần đánh giá sử dụng sai số hồi quy. Không dùng confusion matrix, false positive/false negative hoặc accuracy của bài toán phân loại để thay cho các metric trên.
-
-9. Tệp kết quả và tái lập
-
-Mỗi lần chạy tạo thư mục riêng bên dưới OUT_ROOT. Các tệp quan trọng gồm:
-
-Tệp
-
-Nội dung
-
-config.json
-
-Seed, hyperparameter, môi trường và hash metadata
-
-train_split.csv, val_split.csv, test_split.csv
-
-Manifest ảnh/bệnh nhân của từng tập
-
-data_audit.csv, excluded_metadata.csv
-
-Kết quả kiểm tra và metadata bị loại
-
-image_issues.csv, duplicate_images.csv
-
-Vấn đề ảnh và trùng lặp được ghi nhận
-
-E1_history.csv … E4_history.csv
-
-Loss và metric theo epoch
-
-E1_best.pth … E4_best.pth
-
-Trọng số checkpoint tốt nhất theo validation
-
-validation_results.csv, test_results.csv
-
-Bảng kết quả tổng hợp
-
-E1_predictions.csv … E4_predictions.csv
-
-Nhãn thật, dự đoán và sai số trên test
-
-figures/
-
-Các biểu đồ được lưu bởi cell đánh giá
-
-summary_vi.md
-
-Tóm tắt định lượng bằng tiếng Việt
-
-Giữ nguyên các tệp của cùng một run. Không ghép bảng metric của run này với checkpoint hoặc split của run khác. Seed cố định hỗ trợ tái lập nhưng không bảo đảm kết quả trùng tuyệt đối giữa mọi phần cứng và phiên bản thư viện.
-
-10. Quy trình làm việc nhóm trên GitHub
-
-Cách đóng góp
-
-Xác định nhiệm vụ trong 01_MEMBER_TASKS.md hoặc tạo Issue mô tả rõ việc cần làm.
-
-Từ bản main đã cập nhật, tạo branch riêng cho từng thay đổi.
-
-Sửa nội dung, kiểm tra cell liên quan và ghi rõ cấu hình đã dùng.
-
-Commit những tệp cần thiết, kiểm tra diff trước khi push.
-
-Mở Pull Request, nêu vấn đề, thay đổi và cách kiểm tra; nhờ thành viên khác review trước khi merge.
-
-Ví dụ chỉ cập nhật README, chạy từ thư mục gốc repository sau khi working tree đã sạch:
-
+```bash
 git switch main
 git pull --ff-only
 git switch -c docs/coursework-readme
-git status
+
 git diff -- CourseWork/README.md
 git add CourseWork/README.md
 git commit -m "docs: update regression coursework README"
+
 git push -u origin docs/coursework-readme
+```
 
-Sau đó tạo Pull Request từ docs/coursework-readme vào main. Nếu sửa trực tiếp trên GitHub, mở CourseWork/README.md, chọn biểu tượng bút chì, thay nội dung, xem Preview rồi lưu thay đổi vào branch phù hợp.
+Sau đó mở Pull Request từ branch mới vào `main`.
 
-Phân công tham khảo
+### Nguyên tắc quản lý
 
-Phần việc
+- Thống nhất người tích hợp notebook final để giảm xung đột.
+- Giữ output thực tế trong bản nộp báo cáo.
+- Ghi rõ cấu hình khi thay đổi thí nghiệm.
+- Tải dataset riêng, không đưa toàn bộ ảnh và ZIP vào repository.
+- Ghi nhận đóng góp thực tế trong `01_MEMBER_TASKS.md`.
+- Kiểm tra mọi số liệu do AI hỗ trợ diễn giải bằng output thật.
 
-Đầu ra cần kiểm tra
+---
 
-Điều phối và tích hợp
+## 13. Lỗi thường gặp
 
-Mục tiêu, tiến độ và bản final thống nhất
+| Lỗi | Cách xử lý |
+|---|---|
+| Không thấy `sample_labels.csv` | Giải nén dữ liệu và kiểm tra `DATA_DIR` |
+| CSV thiếu `Patient Age` | Kiểm tra đúng metadata có nhãn tuổi |
+| Đường dẫn lặp `CourseWork/CourseWork` | Kiểm tra `Path.cwd()` hoặc dùng đường dẫn tuyệt đối |
+| Thiếu thư viện | Cài vào đúng môi trường Python của kernel |
+| Không chạy GPU | Kiểm tra PyTorch và `torch.cuda.is_available()` |
+| Train quá lâu khi chuẩn bị báo cáo | Dùng output đã lưu hoặc chế độ `reload` |
+| Reload báo dữ liệu không khớp | Kiểm tra metadata, ảnh và manifest của đúng run |
+| Không tìm thấy checkpoint | Kiểm tra `RUN_DIR` và file `<experiment>_best.pth` |
 
-Dữ liệu
+---
 
-Metadata, audit và patient-level split
+## 14. Kết luận
 
-Mô hình
+Nhóm đã triển khai pipeline **hồi quy tuổi từ ảnh X-quang ngực** theo yêu cầu CNN + Global Average Pooling + Linear output, đồng thời so sánh MAE/MSE và kiểm tra augmentation bằng E1–E4.
 
-CNN + GAP + Linear, input/output shape
+Trong lần chạy final, **E3 — MSE có augmentation** đạt test MAE **11,432 năm**, RMSE **14,211 năm** và R² **0,316**, cải thiện MAE khoảng **19%** so với baseline tuổi trung bình.
 
-Loss và training
+Mô hình vẫn còn sai số lớn ở hai đầu phân bố tuổi. Hướng phát triển tiếp theo là chạy nhiều seed, điều chỉnh trên validation và đánh giá trên dữ liệu độc lập.
 
-E1–E4, learning curves và checkpoint
+---
 
-Augmentation
+## 15. Tài liệu tham khảo
 
-Phép biến đổi train và so sánh có đối chứng
-
-Đánh giá và báo cáo
-
-Metric, error analysis, README, report và slide
-
-Tên thành viên và đóng góp thực tế cần ghi trong 01_MEMBER_TASKS.md. Bảng trên mô tả nhóm công việc, không thay cho minh chứng đóng góp.
-
-Quản lý notebook và dữ liệu
-
-Tránh để nhiều người cùng sửa một notebook trong cùng thời điểm; thống nhất người tích hợp bản final.
-
-Giữ output thực tế trong notebook nộp báo cáo; bỏ output lỗi hoặc log tiến trình quá dài khi chúng không cần thiết.
-
-Đưa mã nguồn, tài liệu, cấu hình và bảng kết quả cần đối chiếu lên GitHub.
-
-Dữ liệu ảnh thô, ZIP và môi trường .venv được tải/cài riêng.
-
-Nếu checkpoint được chia sẻ qua GitHub Releases hoặc nơi lưu trữ khác, ghi rõ run tương ứng để người khác có thể reload.
-
-Có thể bổ sung các dòng sau vào .gitignore ở thư mục gốc nếu phù hợp với cách bố trí dữ liệu của nhóm:
-
-.venv/
-__pycache__/
-.ipynb_checkpoints/
-/CourseWork/archive*/
-/CourseWork/**/*.zip
-/CourseWork/nih_runs/**/*.pth
-
-Các quy tắc này chỉ bỏ qua tệp chưa được Git theo dõi. Không tự động xóa tệp đã commit. Không bỏ qua toàn bộ nih_runs nếu nhóm muốn giữ CSV, cấu hình và biểu đồ để đối chiếu kết quả.
-
-Sử dụng AI trong coursework
-
-AI có thể hỗ trợ giải thích code, rà lỗi, viết tài liệu và gợi ý cách trực quan hóa. Nhóm chịu trách nhiệm kiểm tra code, chạy thực nghiệm và đối chiếu mọi con số với output thật. Khi AI hỗ trợ thay đổi phương pháp, cần ghi lại thay đổi và kiểm chứng trước khi đưa vào báo cáo. Không tạo số liệu thay cho kết quả chưa chạy.
-
-11. Xử lý lỗi thường gặp
-
-Hiện tượng
-
-Cách kiểm tra và xử lý
-
-Không thấy sample_labels.csv
-
-Kiểm tra đã giải nén; đặt DATA_DIR đến thư mục chứa dữ liệu hoặc chỉ định CSV_FILE
-
-Đường dẫn lặp CourseWork/CourseWork
-
-In Path.cwd(); dùng đường dẫn tuyệt đối cho DATA_DIR
-
-CSV thiếu Patient Age
-
-Kiểm tra đúng metadata của tập mẫu; CSV chỉ có nhãn bệnh chưa cung cấp nhãn hồi quy tuổi
-
-ModuleNotFoundError
-
-Cài thư viện bằng Python của .venv, chọn lại kernel rồi restart
-
-Không dùng được GPU
-
-Kiểm tra phần cứng, bản PyTorch và torch.cuda.is_available(); notebook vẫn có thể chạy CPU
-
-E1–E4 train quá lâu khi chuẩn bị báo cáo
-
-Xem output đã lưu hoặc dùng reload với run đầy đủ; không đổi smoke thành kết quả final
-
-reload báo dữ liệu không khớp
-
-Kiểm tra metadata, ảnh và manifest của cùng run; không bỏ qua kiểm tra hash
-
-Không tìm thấy checkpoint khi inference
-
-Kiểm tra file <experiment>_best.pth trong đúng RUN_DIR
-
-12. Kết luận và giới hạn
-
-Nhóm đã xây dựng pipeline hồi quy tuổi từ ảnh X-quang: kiểm tra dữ liệu, chia theo bệnh nhân, tiền xử lý, CNN + GAP + Linear, so sánh MAE/MSE, thử augmentation và phân tích sai số.
-
-Trong lần chạy final, E3 — MSE có augmentation đạt kết quả tốt nhất theo validation và có test MAE 11,432 năm, cải thiện khoảng 19% so với baseline tuổi trung bình. Tuy nhiên, kết quả còn phụ thuộc một seed, một split và ngân sách 10 epoch. Sai số lớn ở hai đầu phân bố tuổi và số lượng ít ở nhóm tuổi cao là những hạn chế cần trình bày rõ.
-
-Hướng phát triển: lặp nhiều seed, kiểm tra độ ổn định của thứ hạng, điều chỉnh trên validation, cải thiện dữ liệu ở nhóm tuổi ít mẫu và đánh giá trên tập độc lập. Mô hình hiện phục vụ coursework, chưa được xác nhận cho sử dụng lâm sàng.
+- [Random Sample of NIH Chest X-ray Dataset](https://www.kaggle.com/datasets/nih-chest-xrays/sample)
+- [NIH ChestX-ray14](https://nihcc.app.box.com/v/ChestXray-NIHCC)
+- [PyTorch — hướng dẫn cài đặt](https://pytorch.org/get-started/locally/)
+- [Jupyter Notebooks trong VS Code](https://code.visualstudio.com/docs/datascience/jupyter-notebooks)
+- Notebook final: `NIH_Age_Regression_Nhom3_Local.ipynb`.
+- Run được báo cáo: `full_20260925_191518_261037`.
