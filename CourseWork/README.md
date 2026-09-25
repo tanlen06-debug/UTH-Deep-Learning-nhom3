@@ -1,123 +1,135 @@
-# 🩻 Nhóm 3 — Medical Image Regression
+# 🩻 Group 3 — Medical Image Regression
 
-## Dự đoán tuổi bệnh nhân từ ảnh X-quang ngực
+## Patient Age Prediction from Chest X-ray Images
 
-Coursework học phần **Deep Learning**, thực hiện bài toán **hồi quy tuổi** bằng mô hình **CNN + Global Average Pooling + Linear output**.
+This Deep Learning coursework develops a **patient age regression model** using **CNN + Global Average Pooling + Linear output**.
 
-Nhóm sử dụng **Random Sample of NIH Chest X-ray Dataset**, so sánh **MAE và MSE loss**, đồng thời kiểm tra ảnh hưởng của **data augmentation** thông qua bốn thí nghiệm E1–E4.
+The project uses the **Random Sample of NIH Chest X-ray Dataset**, compares **MAE and MSE loss**, and evaluates **data augmentation** through four controlled experiments: E1–E4.
 
 ---
 
-## 1. Thông tin dự án
+## 1. Project Overview
 
-| Nội dung | Thông tin |
+| Item | Description |
 |---|---|
-| Nhóm thực hiện | Nhóm 3 |
-| Học phần | Deep Learning |
-| Bài toán | Medical Image Regression |
-| Mục tiêu | Dự đoán tuổi bệnh nhân từ ảnh X-quang ngực |
-| Đầu vào | Một ảnh X-quang ngực |
-| Đầu ra | Một giá trị tuổi liên tục, đơn vị năm |
-| Mô hình | CNN + Global Average Pooling + Linear |
+| Team | Group 3 |
+| Course | Deep Learning |
+| Task | Medical Image Regression |
+| Objective | Predict patient age from a chest X-ray image |
+| Input | One chest X-ray image |
+| Output | A continuous age estimate in years |
+| Architecture | CNN + Global Average Pooling + Linear |
 | Framework | PyTorch |
-| Môi trường | Jupyter Notebook trong Visual Studio Code |
-| Notebook chính | [NIH_Age_Regression_Nhom3_Local.ipynb](./NIH_Age_Regression_Nhom3_Local.ipynb) |
+| Environment | Jupyter Notebook in Visual Studio Code |
+| Main notebook | [NIH_Age_Regression_Nhom3_Local.ipynb](./NIH_Age_Regression_Nhom3_Local.ipynb) |
 
-> **Phạm vi:** Nhóm thực hiện hồi quy tuổi trên tập mẫu NIH. Kết quả không đại diện cho toàn bộ NIH ChestX-ray14 và chưa được xác nhận cho sử dụng lâm sàng.
+> **Scope:** This project evaluates age regression on a sample of the NIH dataset. Its results do not represent performance on the complete NIH ChestX-ray14 dataset. The model has not been validated for clinical use.
 
 ---
 
-## 2. Mục tiêu và câu hỏi nghiên cứu
+## 2. Objectives and Research Questions
 
-### Mục tiêu
+### Objectives
 
-- Xây dựng pipeline Deep Learning hoàn chỉnh cho bài toán hồi quy ảnh y tế.
-- Sử dụng nhãn `Patient Age` để dự đoán tuổi.
-- Chia dữ liệu theo bệnh nhân nhằm hạn chế rò rỉ dữ liệu.
-- Triển khai đúng kiến trúc CNN + GAP + Linear.
-- So sánh hai hàm mất mát MAE và MSE.
-- Đánh giá tác động của augmentation.
-- Phân tích kết quả tổng thể và sai số theo nhóm tuổi.
+- Build a complete Deep Learning pipeline for medical image regression.
+- Use `Patient Age` as the continuous target.
+- Split the dataset by patient to reduce data leakage.
+- Implement CNN + Global Average Pooling + Linear output.
+- Compare MAE and MSE loss under consistent experimental conditions.
+- Evaluate the effect of data augmentation.
+- Analyze overall performance, age-dependent errors, and individual predictions.
 
-### Câu hỏi nghiên cứu
+### Research Questions
 
-1. CNN có tốt hơn baseline dự đoán tuổi trung bình hoặc trung vị không?
-2. MAE loss và MSE loss ảnh hưởng thế nào đến kết quả?
-3. Augmentation có cải thiện khả năng tổng quát hóa không?
-4. Mô hình hoạt động tốt hoặc kém ở những nhóm tuổi nào?
+1. Can the CNN outperform constant predictions based on the training-set mean or median age?
+2. How do MAE and MSE loss affect regression performance?
+3. Does augmentation improve generalization?
+4. Which age groups and individual cases produce the largest errors?
+
+### Alignment with the Coursework Requirements
+
+| Requirement | Implementation |
+|---|---|
+| Medical image regression | Predict patient age from chest X-ray images |
+| NIH ChestX-ray14 data | Use the NIH random sample with age metadata |
+| CNN | Four convolutional blocks |
+| Global Average Pooling | `nn.AdaptiveAvgPool2d(1)` |
+| Linear output | `nn.Linear(256, 1)` |
+| Compare MAE and MSE | E1–E4 experimental matrix |
+| Test augmentations | Compare training with and without random affine transformations |
 
 ---
 
 ## 3. Dataset
 
-**Dữ liệu sử dụng:**
+**Dataset used:**
 
 [Random Sample of NIH Chest X-ray Dataset — Kaggle](https://www.kaggle.com/datasets/nih-chest-xrays/sample)
 
-**Nguồn dữ liệu gốc trong đề bài:**
+**Original dataset source specified in the coursework:**
 
 [NIH ChestX-ray14](https://nihcc.app.box.com/v/ChestXray-NIHCC)
 
-### Metadata cần thiết
+### Required Metadata
 
-| Trường | Vai trò |
+| Field | Purpose |
 |---|---|
-| `Image Index` | Ghép metadata với tên ảnh |
-| `Patient ID` | Chia dữ liệu theo bệnh nhân |
-| `Patient Age` | Nhãn hồi quy tuổi |
+| `Image Index` | Match metadata records to image filenames |
+| `Patient ID` | Group examinations belonging to the same patient |
+| `Patient Age` | Provide the regression target |
 
-Nhóm chọn **dự đoán tuổi** vì dữ liệu có nhãn `Patient Age`. Các nhãn bệnh không được dùng thay cho tuổi hoặc kích thước khối u.
+The project selects **age prediction** because the sample includes `Patient Age`. Disease labels are not used as substitutes for age or tumor size.
 
-### Kết quả kiểm tra dữ liệu trong lần chạy final
+### Data Audit from the Final Run
 
-| Hạng mục | Số lượng |
+| Item | Count |
 |---|---:|
-| Dòng metadata ban đầu | 5.606 |
-| Dòng bị loại khi làm sạch | 2 |
-| Ảnh sử dụng | 5.604 |
-| Bệnh nhân | 4.228 |
-| Ảnh thiếu hoặc không đọc được ghi nhận | 0 |
+| Initial metadata records | 5,606 |
+| Records excluded during cleaning | 2 |
+| Images retained | 5,604 |
+| Unique patients | 4,228 |
+| Missing or unreadable images identified | 0 |
 
-Tuổi được chuyển về đơn vị năm và kiểm tra trong phạm vi nghiên cứu từ **1 đến 100 năm**.
+Age values are converted into years and checked against the study range of **1–100 years**.
 
-> Ví dụ: `018M` tương ứng **1,5 năm**, không phải 18 tuổi.
+> For example, `018M` represents **1.5 years**, not 18 years.
 
 ---
 
-## 4. Tổ chức tệp
+## 4. Project Files
 
-| Đường dẫn | Nội dung |
+| Path | Purpose |
 |---|---|
-| `CourseWork/README.md` | Giới thiệu và hướng dẫn thực hiện |
-| `CourseWork/00_COURSEWORK_PLAN.md` | Kế hoạch coursework |
-| `CourseWork/01_MEMBER_TASKS.md` | Phân công thành viên |
-| `CourseWork/NIH_Age_Regression_Nhom3_Local.ipynb` | Notebook chính |
-| `CourseWork/archive (5)/` | Ví dụ thư mục dữ liệu đã giải nén |
-| `CourseWork/nih_runs/` | Các lần chạy và kết quả đã lưu |
+| `CourseWork/README.md` | Project overview and instructions |
+| `CourseWork/00_COURSEWORK_PLAN.md` | Coursework plan |
+| `CourseWork/01_MEMBER_TASKS.md` | Team responsibilities |
+| `CourseWork/NIH_Age_Regression_Nhom3_Local.ipynb` | Main notebook |
+| `CourseWork/archive (5)/` | Example location for the extracted dataset |
+| `CourseWork/nih_runs/` | Saved experiment runs and outputs |
 
-Dữ liệu ảnh và metadata được tải riêng từ Kaggle. Có thể đặt dữ liệu ngoài repository rồi cập nhật `DATA_DIR`.
+Download the images and metadata separately from Kaggle. The dataset may also be stored outside the repository by updating `DATA_DIR`.
 
-Thư mục dữ liệu cần chứa:
+The extracted dataset must contain:
 
-- File `sample_labels.csv`.
-- Các ảnh PNG trong thư mục con.
+- `sample_labels.csv`.
+- The corresponding PNG images in its subdirectories.
 
-Notebook tìm metadata và ảnh bên dưới `DATA_DIR`, nên thư mục giải nén có thể có thêm một cấp `sample/`.
+The notebook searches recursively under `DATA_DIR`. An additional nested `sample/` directory is therefore acceptable.
 
 ---
 
-## 5. Hướng dẫn chạy trên VS Code
+## 5. Running the Notebook in VS Code
 
-### Bước 1 — Chuẩn bị môi trường
+### Step 1 — Prepare the Environment
 
-Cài Python cùng hai extension của Microsoft trong VS Code:
+Install Python and the following Microsoft extensions in VS Code:
 
 - **Python**
 - **Jupyter**
 
-Mở thư mục repository và chọn đúng môi trường Python làm kernel của notebook.
+Open the repository folder and select the appropriate Python environment as the notebook kernel.
 
-Các thư viện sử dụng:
+Required packages:
 
 ```text
 torch
@@ -131,19 +143,19 @@ tqdm
 ipykernel
 ```
 
-Cài PyTorch phù hợp với CPU hoặc GPU theo hướng dẫn:
+Install PyTorch according to the operating system and available hardware:
 
 https://pytorch.org/get-started/locally/
 
-### Bước 2 — Tải và giải nén dataset
+### Step 2 — Download and Extract the Dataset
 
-Tải bộ dữ liệu từ Kaggle, sau đó giải nén.
+Download the dataset from Kaggle and extract the archive.
 
-> `DATA_DIR` phải trỏ đến **thư mục đã giải nén**, không trỏ đến file ZIP.
+> `DATA_DIR` must point to an **extracted directory**, not a ZIP file.
 
-### Bước 3 — Chỉnh cell cấu hình
+### Step 3 — Update the Configuration Cell
 
-Ví dụ:
+Example:
 
 ```python
 from pathlib import Path
@@ -157,35 +169,39 @@ RUN_DIR = None
 OUT_ROOT = Path.cwd() / "nih_runs"
 ```
 
-Thay đường dẫn ví dụ bằng đường dẫn thực tế trên máy.
+Replace the example path with the actual dataset location.
 
-Nếu có nhiều file CSV cùng tên nhưng khác nội dung, chỉ định rõ:
+If multiple CSV files have the same name but different contents, specify the intended file explicitly:
 
 ```python
-CSV_FILE = Path(r"D:\Datasets\NIH_sample\sample_labels.csv")
+CSV_FILE = Path(
+    r"D:\Datasets\NIH_sample\sample_labels.csv"
+)
 ```
 
-### Bước 4 — Chọn chế độ chạy
+Check the printed working directory to confirm where the output folder will be created.
 
-| Chế độ | Mục đích |
+### Step 4 — Select an Execution Mode
+
+| Mode | Purpose |
 |---|---|
-| `check` | Kiểm tra dữ liệu, split, preprocessing và mô hình; không train E1–E4 |
-| `smoke` | Chạy nhanh với tập nhỏ và 1 epoch để kiểm tra pipeline |
-| `full` | Huấn luyện đầy đủ E1–E4 |
-| `reload` | Đọc lại kết quả đã lưu mà không train lại |
+| `check` | Validate data, splits, preprocessing, and model shapes without training E1–E4 |
+| `smoke` | Test the pipeline using small subsets and one epoch per experiment |
+| `full` | Train all four experiments using the configured training budget |
+| `reload` | Load saved results and reproduce evaluation without retraining |
 
-**Quy trình khuyến nghị:**
+**Recommended workflow:**
 
-1. Chạy `check` để xác nhận dữ liệu và đường dẫn.
-2. Chạy `smoke` nếu cần kiểm tra toàn bộ pipeline.
-3. Chạy `full` để tạo kết quả chính thức.
-4. Dùng `reload` để xem lại kết quả khi chuẩn bị báo cáo.
+1. Run `check` when setting up the project.
+2. Run `smoke` if a short pipeline test is needed.
+3. Run `full` to generate the main experimental results.
+4. Use `reload` to review an existing run before presenting.
 
-> Kết quả `smoke` chỉ dùng kiểm tra code, không dùng làm kết quả final.
+> Smoke-test results are intended for code verification and must not be presented as final experimental results.
 
-Sau khi thay đổi cấu hình, chọn **Restart Kernel → Run All**.
+After changing the configuration, select **Restart Kernel → Run All**.
 
-### Bước 5 — Huấn luyện đầy đủ
+### Step 5 — Run the Full Experiments
 
 ```python
 MODE = "full"
@@ -201,9 +217,11 @@ AGE_SCALE = 100.0
 NUM_WORKERS = 0
 ```
 
-Notebook tự sử dụng CUDA nếu khả dụng, nếu không sẽ chạy CPU.
+The notebook uses CUDA when available and otherwise runs on CPU.
 
-### Bước 6 — Xem lại kết quả đã lưu
+Changing the image size, batch size, epoch count, or split creates a different experimental configuration. Record such changes before comparing results.
+
+### Step 6 — Reload an Existing Run
 
 ```python
 MODE = "reload"
@@ -214,102 +232,107 @@ RUN_DIR = Path(
 )
 ```
 
-Thay `RUN_DIR` bằng thư mục thực tế của lần chạy cần xem.
+Replace `RUN_DIR` with the actual saved-run directory.
 
-Cần giữ dataset tương ứng cùng các tệp cấu hình, split, history, predictions, bảng kết quả và checkpoint. Giữ cấu hình tiền xử lý phù hợp với lần chạy đã lưu.
+Reloading requires the matching dataset and saved configuration, split manifests, histories, predictions, result tables, and checkpoints. Keep preprocessing settings consistent with the saved run.
 
-> `reload` là đọc lại kết quả và kiểm tra inference. Đây không phải chức năng tiếp tục huấn luyện từ epoch bị ngắt.
+> `reload` restores results and supports inference checks. It does not resume interrupted training because the notebook does not save the optimizer state required for an exact training continuation.
 
 ---
 
-## 6. Quy trình xử lý
+## 6. Deep Learning Workflow
 
-| Bước | Nội dung |
+| Stage | Description |
 |---|---|
-| 1 | Đọc metadata và ghép đường dẫn ảnh |
-| 2 | Chuyển tuổi về năm, kiểm tra dữ liệu |
-| 3 | Khám phá phân bố tuổi và số ảnh mỗi bệnh nhân |
-| 4 | Chia train/validation/test theo bệnh nhân |
-| 5 | Tiền xử lý ảnh và chuẩn hóa nhãn |
-| 6 | Xây dựng CNN + GAP + Linear |
-| 7 | Huấn luyện bốn thí nghiệm E1–E4 |
-| 8 | Chọn checkpoint theo validation MAE |
-| 9 | Đánh giá test và so sánh baseline |
-| 10 | Phân tích sai số, lưu kết quả và báo cáo |
+| 1 | Load metadata and match image paths |
+| 2 | Convert age labels into years and validate the data |
+| 3 | Explore age distribution and repeated examinations |
+| 4 | Create patient-level train, validation, and test splits |
+| 5 | Preprocess images and scale the regression target |
+| 6 | Build CNN + GAP + Linear |
+| 7 | Train E1–E4 |
+| 8 | Select checkpoints using validation MAE |
+| 9 | Evaluate test performance and compare baselines |
+| 10 | Analyze errors and save reproducible outputs |
 
-### Phân chia dữ liệu trong lần chạy final
+### Final Data Split
 
-| Tập dữ liệu | Số ảnh | Số bệnh nhân |
+| Subset | Images | Patients |
 |---|---:|---:|
-| Train | 3.956 | 2.959 |
+| Training | 3,956 | 2,959 |
 | Validation | 824 | 634 |
 | Test | 824 | 635 |
 
-Notebook kiểm tra:
+The notebook checks that:
 
-- Không có bệnh nhân xuất hiện ở nhiều tập.
-- Không có hash nội dung ảnh trùng nhau giữa các tập.
+- Patient IDs do not overlap between subsets.
+- Identical image-content hashes do not overlap between subsets.
 
-### Tiền xử lý
+These checks reduce important leakage risks but do not detect every possible near-duplicate image.
 
-- Chuyển ảnh sang grayscale.
-- Resize giữ tỷ lệ và padding về **224 × 224**.
-- Chuyển ảnh thành tensor và normalize.
-- Chia tuổi cho 100 khi tối ưu.
-- Nhân lại 100 trước khi tính metric theo đơn vị năm.
+### Preprocessing
+
+- Convert images to grayscale.
+- Resize while preserving aspect ratio and pad to **224 × 224**.
+- Convert images into tensors and normalize.
+- Divide age labels by 100 during optimization.
+- Convert predictions back to years before calculating evaluation metrics.
 
 ---
 
-## 7. Kiến trúc mô hình
+## 7. Model Architecture
 
-Mô hình gồm bốn convolution block:
+Each convolutional block contains:
 
 ```text
 Conv2d → BatchNorm2d → ReLU → MaxPool2d
 ```
 
-| Thành phần | Kích thước đầu ra cho một ảnh |
+| Component | Output shape for one image |
 |---|---|
 | Input | 1 × 224 × 224 |
-| Conv block 1 | 32 × 112 × 112 |
-| Conv block 2 | 64 × 56 × 56 |
-| Conv block 3 | 128 × 28 × 28 |
-| Conv block 4 | 256 × 14 × 14 |
+| Convolutional block 1 | 32 × 112 × 112 |
+| Convolutional block 2 | 64 × 56 × 56 |
+| Convolutional block 3 | 128 × 28 × 28 |
+| Convolutional block 4 | 256 × 14 × 14 |
 | Global Average Pooling | 256 × 1 × 1 |
 | Flatten | 256 |
-| Linear | 1 |
+| Linear output | 1 |
 
-**Số tham số huấn luyện: 389.057.**
+**Trainable parameters: 389,057.**
 
-Các lớp cuối:
+The final layers are:
 
 ```python
 self.gap = nn.AdaptiveAvgPool2d(1)
 self.output = nn.Linear(256, 1)
 ```
 
-Đầu ra là một giá trị liên tục. Mô hình không sử dụng softmax hoặc sigmoid ở lớp cuối.
+Global Average Pooling summarizes each feature map before the linear layer.
+
+The model returns a continuous value. No softmax or sigmoid is applied to the final output.
 
 ---
 
-## 8. Thiết kế thí nghiệm E1–E4
+## 8. Experimental Design
 
-| Thí nghiệm | Loss | Augmentation |
+| Experiment | Loss | Training augmentation |
 |---|---|---|
-| E1 | MSE | Không |
-| E2 | MAE / L1 | Không |
-| E3 | MSE | Có |
-| E4 | MAE / L1 | Có |
+| E1 | MSE | No |
+| E2 | MAE / L1 | No |
+| E3 | MSE | Yes |
+| E4 | MAE / L1 | Yes |
 
-Các thí nghiệm giữ cùng:
+The experiments share:
 
-- Patient-level split.
-- Kiến trúc mô hình.
-- Seed 42.
+- The same patient-level split.
+- The same model architecture.
+- Random seed 42.
 - Batch size 16.
-- AdamW, learning rate 0,001.
-- Weight decay 0,0001.
-- Ngân sách 10 epoch.
+- AdamW optimizer.
+- Learning rate 0.001.
+- Weight decay 0.0001.
+- Ten epochs per experiment.
 
 ### Augmentation
 
@@ -322,127 +345,152 @@ transforms.RandomAffine(
 )
 ```
 
-Augmentation chỉ áp dụng ngẫu nhiên trên **train**. Validation và test sử dụng preprocessing xác định.
+Random augmentation is applied only to the **training set**. Validation and test images use deterministic preprocessing.
 
-**Nguyên tắc lựa chọn mô hình:**
+### Controlled Comparisons
 
-- Trong mỗi thí nghiệm: lấy checkpoint có validation MAE thấp nhất.
-- Giữa E1–E4: chọn cấu hình có validation MAE thấp nhất.
-- Test dùng để đánh giá, không dùng để chọn epoch hoặc điều chỉnh cấu hình.
+- **Loss effect:** E1 vs. E2 and E3 vs. E4.
+- **Augmentation effect:** E1 vs. E3 and E2 vs. E4.
+
+MSE and MAE loss have different scales. Their raw loss magnitudes should not be compared directly. **Validation MAE in years** provides the common model-selection criterion.
+
+### Model Selection
+
+- Within each experiment, retain the checkpoint with the lowest validation MAE.
+- Across E1–E4, select the configuration with the lowest validation MAE.
+- Use test results for final evaluation, not for choosing epochs or tuning hyperparameters.
 
 ---
 
-## 9. Kết quả final
+## 9. Final Results
 
-### Kết quả validation
+### Validation Results
 
-| Thí nghiệm | Epoch tốt nhất | Validation MAE — năm |
+| Experiment | Best epoch | Validation MAE — years |
 |---|---:|---:|
-| E1 | 9 | 11,323900 |
-| E2 | 9 | 11,790808 |
-| **E3** | **10** | **11,258113** |
-| E4 | 9 | 12,569042 |
+| E1 | 9 | 11.323900 |
+| E2 | 9 | 11.790808 |
+| **E3** | **10** | **11.258113** |
+| E4 | 9 | 12.569042 |
 
-**Cấu hình được chọn: E3 — MSE có augmentation.**
+**Selected configuration: E3 — MSE with augmentation.**
 
-### Kết quả test
+### Test Results
 
-| Mô hình | MAE ↓ | RMSE ↓ | R² ↑ | Bias |
+| Model | MAE ↓ | RMSE ↓ | R² ↑ | Bias |
 |---|---:|---:|---:|---:|
-| E1 | 11,695 | 14,469 | 0,291 | −5,678 |
-| E2 | 11,828 | 14,685 | 0,270 | −2,809 |
-| **E3** | **11,432** | **14,211** | **0,316** | **+0,576** |
-| E4 | 12,592 | 15,395 | 0,198 | −4,559 |
-| Baseline tuổi trung bình train | 14,107 | 17,187 | ≈0 | +0,028 |
-| Baseline tuổi trung vị train | 13,942 | 17,366 | −0,021 | +2,488 |
+| E1 | 11.695 | 14.469 | 0.291 | −5.678 |
+| E2 | 11.828 | 14.685 | 0.270 | −2.809 |
+| **E3** | **11.432** | **14.211** | **0.316** | **+0.576** |
+| E4 | 12.592 | 15.395 | 0.198 | −4.559 |
+| Training-mean baseline | 14.107 | 17.187 | ≈0 | +0.028 |
+| Training-median baseline | 13.942 | 17.366 | −0.021 | +2.488 |
 
-MAE, RMSE và bias có đơn vị **năm**. R² không có đơn vị.
+MAE, RMSE, and bias are measured in **years**. R² is dimensionless.
 
-### Nhận xét
+Both baseline predictions are calculated exclusively from training-set ages.
 
-- E3 giảm MAE khoảng **2,675 năm**, tương đương **19%**, so với baseline tuổi trung bình.
-- Augmentation cải thiện kết quả khi dùng MSE trong lần chạy này.
-- Augmentation làm tăng sai số khi dùng MAE trong lần chạy này.
-- E3 chỉ tốt hơn E1 khoảng **0,066 năm trên validation**; cần chạy nhiều seed để kiểm tra độ ổn định.
-- Mô hình có xu hướng dự đoán cao ở người trẻ và thấp ở người lớn tuổi.
+### Interpretation
 
-> Các kết luận trên dựa trên một seed, một split và 10 epoch cho mỗi thí nghiệm.
+- E3 reduces MAE by approximately **2.675 years**, or **19%**, relative to the training-mean baseline.
+- Augmentation improves test performance with MSE in this run.
+- Augmentation increases test error with MAE in this run.
+- E3 improves validation MAE over E1 by only approximately **0.066 years**.
+- The model tends to overestimate younger ages and underestimate older ages.
+
+> These findings come from one seed, one split, and ten epochs per experiment. Repeated runs are needed to assess the stability of the ranking.
 
 ---
 
-## 10. Đánh giá và trực quan hóa
+## 10. Evaluation and Visualizations
 
-Notebook cung cấp:
+The notebook includes:
 
-- Phân bố tuổi.
-- Phân bố tuổi giữa train, validation và test.
-- Ảnh trước và sau augmentation.
-- Training/validation loss.
-- Training/validation MAE.
-- Bảng so sánh E1–E4 với baseline.
-- Biểu đồ predicted vs. actual.
-- Phân bố residual.
-- Sai số theo nhóm tuổi.
-- Ví dụ có sai số nhỏ và sai số lớn.
-- Bootstrap theo bệnh nhân.
-- Kiểm tra nạp checkpoint và dự đoán một ảnh.
+- Overall age distribution.
+- Age distributions across training, validation, and test subsets.
+- Images before and after augmentation.
+- Training and validation loss curves.
+- Training and validation MAE curves.
+- E1–E4 and baseline comparisons.
+- Predicted-versus-actual age plots.
+- Residual distributions.
+- Error analysis by age group.
+- Examples with small and large prediction errors.
+- Patient-level bootstrap analysis.
+- Checkpoint loading and single-image inference verification.
 
-### Một số kết quả phân tích E3
+### Additional E3 Results
 
-| Chỉ số | Kết quả |
+| Measure | Result |
 |---|---|
-| MSE | 201,957 năm² |
-| Median absolute error | 9,789 năm |
-| P90 absolute error | 22,961 năm |
-| Khoảng tin cậy bootstrap 95% của MAE | 10,75–12,16 năm |
-| Số lần bootstrap | 1.000 |
-| MAE nhóm trên 40 đến 60 tuổi | 6,093 năm |
-| MAE nhóm trên 80 đến 100 tuổi | 29,020 năm; chỉ có 6 ảnh |
+| MSE | 201.957 years² |
+| Median absolute error | 9.789 years |
+| 90th-percentile absolute error | 22.961 years |
+| 95% bootstrap interval for MAE | 10.75–12.16 years |
+| Bootstrap repetitions | 1,000 |
+| MAE for ages above 40 through 60 | 6.093 years |
+| MAE for ages above 80 through 100 | 29.020 years; only 6 images |
 
-Khoảng bootstrap là khoảng cho **MAE tổng hợp**, không phải khoảng dự đoán tuổi của từng bệnh nhân.
+Bootstrap resampling is performed by patient, keeping examinations from the same patient together.
 
-Vì đây là bài toán Regression, nhóm dùng sai số hồi quy để đánh giá. Accuracy, confusion matrix và false positive/false negative không thay thế các metric hồi quy trên.
+The interval describes uncertainty in the **aggregate MAE**. It is not a prediction interval for an individual patient's age and does not include variation from retraining with different seeds.
+
+### Reading the Outputs
+
+- **MAE:** Average absolute difference between predicted and actual age.
+- **MSE:** Average squared error; gives greater weight to large errors.
+- **RMSE:** Square root of MSE, expressed in years.
+- **R²:** Performance relative to the variation in the true ages; it is not classification accuracy.
+- **Bias:** Mean of `prediction − actual`.
+- **Residual plots:** Reveal systematic overestimation or underestimation.
+- **Small/large error examples:** Illustrate selected cases, not a random sample of typical performance.
+
+Since this is regression, classification accuracy, confusion matrices, and false-positive/false-negative counts do not replace the regression metrics.
 
 ---
 
-## 11. Lưu kết quả
+## 11. Saved Outputs and Reproducibility
 
-Mỗi lần chạy tạo thư mục riêng trong `nih_runs`.
+Each run creates a separate directory under `nih_runs`.
 
-| Tệp | Nội dung |
+| File | Contents |
 |---|---|
-| `config.json` | Cấu hình và thông tin môi trường |
-| `train_split.csv` | Manifest tập train |
-| `val_split.csv` | Manifest tập validation |
-| `test_split.csv` | Manifest tập test |
-| `data_audit.csv` | Kết quả kiểm tra dữ liệu |
-| `E1_history.csv` … `E4_history.csv` | Lịch sử huấn luyện |
-| `E1_best.pth` … `E4_best.pth` | Checkpoint tốt nhất |
-| `validation_results.csv` | Kết quả validation |
-| `test_results.csv` | Kết quả test |
-| `E1_predictions.csv` … `E4_predictions.csv` | Dự đoán và sai số |
-| `figures/` | Biểu đồ |
-| `summary_vi.md` | Tóm tắt kết quả |
+| `config.json` | Configuration and environment information |
+| `train_split.csv` | Training manifest |
+| `val_split.csv` | Validation manifest |
+| `test_split.csv` | Test manifest |
+| `data_audit.csv` | Data validation summary |
+| `E1_history.csv` … `E4_history.csv` | Training histories |
+| `E1_best.pth` … `E4_best.pth` | Best checkpoints |
+| `validation_results.csv` | Validation results |
+| `test_results.csv` | Test results |
+| `E1_predictions.csv` … `E4_predictions.csv` | Predictions and errors |
+| `figures/` | Saved visualizations |
+| `summary_vi.md` | Automatically generated Vietnamese result summary |
 
-Không ghép checkpoint, split và metric từ các lần chạy khác nhau.
+Keep the configuration, splits, checkpoints, and metrics from the same run together.
+
+Do not combine a checkpoint from one run with metrics from another.
+
+A fixed seed supports reproducibility but does not guarantee identical results across all hardware and software environments.
 
 ---
 
-## 12. Làm việc nhóm trên GitHub
+## 12. GitHub Collaboration Workflow
 
-### Quy trình
+### Contribution Process
 
-1. Xác định nhiệm vụ trong Issue hoặc `01_MEMBER_TASKS.md`.
-2. Tạo branch riêng.
-3. Chỉnh sửa code hoặc tài liệu.
-4. Kiểm tra phần thay đổi và output liên quan.
-5. Commit những tệp cần thiết.
-6. Mở Pull Request để thành viên khác review.
-7. Merge sau khi thống nhất.
+1. Define the task in an Issue or `01_MEMBER_TASKS.md`.
+2. Create a dedicated branch.
+3. Update the relevant code or documentation.
+4. Verify the modified cells and associated outputs.
+5. Commit only the necessary files.
+6. Open a Pull Request.
+7. Request a teammate's review before merging.
 
-### Ví dụ cập nhật README
+### Example: Updating the README
 
-Chạy từ thư mục gốc repository sau khi đã lưu các thay đổi đang làm:
+Run from the repository root after saving or committing any existing work:
 
 ```bash
 git switch main
@@ -456,49 +504,86 @@ git commit -m "docs: update regression coursework README"
 git push -u origin docs/coursework-readme
 ```
 
-Sau đó mở Pull Request từ branch mới vào `main`.
+Then open a Pull Request from the new branch into `main`.
 
-### Nguyên tắc quản lý
+### Repository Practices
 
-- Thống nhất người tích hợp notebook final để giảm xung đột.
-- Giữ output thực tế trong bản nộp báo cáo.
-- Ghi rõ cấu hình khi thay đổi thí nghiệm.
-- Tải dataset riêng, không đưa toàn bộ ảnh và ZIP vào repository.
-- Ghi nhận đóng góp thực tế trong `01_MEMBER_TASKS.md`.
-- Kiểm tra mọi số liệu do AI hỗ trợ diễn giải bằng output thật.
+- Assign one person to integrate the final notebook.
+- Preserve genuine outputs in the submission notebook.
+- Record configuration changes when modifying experiments.
+- Download the dataset separately instead of committing all images and ZIP archives.
+- Record actual contributions in `01_MEMBER_TASKS.md`.
+- Verify AI-assisted explanations and numerical claims against real notebook outputs.
 
----
+### Suggested Responsibility Areas
 
-## 13. Lỗi thường gặp
-
-| Lỗi | Cách xử lý |
+| Area | Expected deliverables |
 |---|---|
-| Không thấy `sample_labels.csv` | Giải nén dữ liệu và kiểm tra `DATA_DIR` |
-| CSV thiếu `Patient Age` | Kiểm tra đúng metadata có nhãn tuổi |
-| Đường dẫn lặp `CourseWork/CourseWork` | Kiểm tra `Path.cwd()` hoặc dùng đường dẫn tuyệt đối |
-| Thiếu thư viện | Cài vào đúng môi trường Python của kernel |
-| Không chạy GPU | Kiểm tra PyTorch và `torch.cuda.is_available()` |
-| Train quá lâu khi chuẩn bị báo cáo | Dùng output đã lưu hoặc chế độ `reload` |
-| Reload báo dữ liệu không khớp | Kiểm tra metadata, ảnh và manifest của đúng run |
-| Không tìm thấy checkpoint | Kiểm tra `RUN_DIR` và file `<experiment>_best.pth` |
+| Coordination | Project scope, schedule, and final integration |
+| Data preparation | Metadata validation, audit, and patient-level splits |
+| Model development | CNN + GAP + Linear and shape verification |
+| Training and losses | E1–E4, checkpoint selection, and learning curves |
+| Augmentation | Transform implementation and controlled comparisons |
+| Evaluation and reporting | Metrics, error analysis, README, report, and slides |
+
+Actual member assignments and contributions should be documented separately.
 
 ---
 
-## 14. Kết luận
+## 13. Troubleshooting
 
-Nhóm đã triển khai pipeline **hồi quy tuổi từ ảnh X-quang ngực** theo yêu cầu CNN + Global Average Pooling + Linear output, đồng thời so sánh MAE/MSE và kiểm tra augmentation bằng E1–E4.
-
-Trong lần chạy final, **E3 — MSE có augmentation** đạt test MAE **11,432 năm**, RMSE **14,211 năm** và R² **0,316**, cải thiện MAE khoảng **19%** so với baseline tuổi trung bình.
-
-Mô hình vẫn còn sai số lớn ở hai đầu phân bố tuổi. Hướng phát triển tiếp theo là chạy nhiều seed, điều chỉnh trên validation và đánh giá trên dữ liệu độc lập.
+| Problem | Suggested action |
+|---|---|
+| `sample_labels.csv` not found | Extract the dataset and check `DATA_DIR` |
+| CSV does not contain `Patient Age` | Use metadata that includes the age target |
+| Repeated `CourseWork/CourseWork` path | Check `Path.cwd()` or use an absolute path |
+| Missing Python package | Install it in the notebook kernel's environment |
+| GPU is unavailable | Check the PyTorch installation and `torch.cuda.is_available()` |
+| Training takes too long before presentation | Review saved outputs or use `reload` |
+| Reload reports a dataset mismatch | Verify the metadata, images, and manifests belong to the same run |
+| Checkpoint is missing | Check `RUN_DIR` and the `<experiment>_best.pth` file |
 
 ---
 
-## 15. Tài liệu tham khảo
+## 14. Limitations and Future Work
+
+### Limitations
+
+- The experiments use a random sample rather than the complete NIH dataset.
+- Results are based on one seed and one patient split.
+- Ten epochs do not establish convergence or optimal tuning.
+- Extreme age groups have fewer observations.
+- Large individual prediction errors remain.
+- Patient and exact-image separation do not eliminate every possible source of dataset bias.
+
+### Future Work
+
+- Repeat experiments with multiple random seeds.
+- Assess the stability of the experiment ranking.
+- Tune hyperparameters using validation data.
+- Improve representation of underrepresented age groups.
+- Evaluate the model on an independent dataset.
+- Investigate persistent age-dependent bias.
+
+---
+
+## 15. Conclusion
+
+The project implements a complete **chest X-ray age regression pipeline** using CNN + Global Average Pooling + Linear output.
+
+Four experiments compare MAE and MSE loss with and without augmentation.
+
+In the final run, **E3 — MSE with augmentation** achieves a test MAE of **11.432 years**, RMSE of **14.211 years**, and R² of **0.316**, reducing MAE by approximately **19%** relative to the training-mean baseline.
+
+However, errors remain substantial at the extremes of the age distribution. The model is an academic coursework experiment and requires further validation before any clinical application.
+
+---
+
+## 16. References
 
 - [Random Sample of NIH Chest X-ray Dataset](https://www.kaggle.com/datasets/nih-chest-xrays/sample)
 - [NIH ChestX-ray14](https://nihcc.app.box.com/v/ChestXray-NIHCC)
-- [PyTorch — hướng dẫn cài đặt](https://pytorch.org/get-started/locally/)
-- [Jupyter Notebooks trong VS Code](https://code.visualstudio.com/docs/datascience/jupyter-notebooks)
-- Notebook final: `NIH_Age_Regression_Nhom3_Local.ipynb`.
-- Run được báo cáo: `full_20260925_191518_261037`.
+- [PyTorch Installation Guide](https://pytorch.org/get-started/locally/)
+- [Jupyter Notebooks in VS Code](https://code.visualstudio.com/docs/datascience/jupyter-notebooks)
+- Final notebook: `NIH_Age_Regression_Nhom3_Local.ipynb`.
+- Reported run: `full_20260925_191518_261037`.
